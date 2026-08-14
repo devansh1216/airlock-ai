@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Airlock AI - Local Privacy Proxy and LLM Guard"
+    >
+
+    <title>Airlock AI</title>
+
+    <!--
+        Our stylesheet.
+
+        Flask serves files from the /static directory.
+    -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}"
+    >
+</head>
+
+
+<body>
+
+    <!-- =====================================================
+         PAGE
+         ===================================================== -->
+
+    <div class="app">
+
+        <!-- =================================================
+             HEADER
+             ================================================= -->
+
+        <header class="header">
+
+            <div class="brand">
+
+                <div class="brand-icon">
+                    🛡️
+                </div>
+
+                <div>
+                    <h1>Airlock AI</h1>
+
+                    <p>
+                        Privacy Proxy &amp; LLM Guard
+                    </p>
+                </div>
+
+            </div>
+
+
+            <div class="security-status">
+
+                <span class="status-dot"></span>
+
+                <span>
+                    Local Privacy Engine
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- =================================================
+             MAIN CONTENT
+             ================================================= -->
+
+        <main class="main-content">
+
+
+            <!-- =================================================
+                 INTRODUCTION
+                 ================================================= -->
+
+            <section class="hero">
+
+                <div class="hero-badge">
+                    🔒 Your sensitive data stays protected
+                </div>
+
+                <h2>
+                    Ask AI without exposing
+                    <span>private information.</span>
+                </h2>
+
+                <p>
+                    Airlock AI detects sensitive information locally,
+                    replaces it with secure tokens, sends only the
+                    sanitized prompt to Gemini, and restores your
+                    information locally in the final response.
+                </p>
+
+            </section>
+
+
+            <!-- =================================================
+                 PROMPT CARD
+                 ================================================= -->
+
+            <section class="card prompt-card">
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h3>
+                            Your Prompt
+                        </h3>
+
+                        <p>
+                            Enter anything you want to ask the AI.
+                        </p>
+
+                    </div>
+
+                    <span class="local-badge">
+                        LOCAL SCAN
+                    </span>
+
+                </div>
+
+
+                <!-- Prompt input -->
+
+                <textarea
+                    id="promptInput"
+                    class="prompt-input"
+                    placeholder="Example: Write an email to John Doe at john.doe@company.com about his ₹50,000 order..."
+                    rows="7"
+                ></textarea>
+
+
+                <!-- Input footer -->
+
+                <div class="input-footer">
+
+                    <span id="characterCount">
+                        0 characters
+                    </span>
+
+                    <button
+                        id="secureButton"
+                        class="primary-button"
+                        type="button"
+                    >
+
+                        <span class="button-icon">
+                            🔐
+                        </span>
+
+                        <span>
+                            Secure &amp; Ask AI
+                        </span>
+
+                    </button>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 LOADING
+                 ================================================= -->
+
+            <section
+                id="loadingSection"
+                class="loading-section hidden"
+            >
+
+                <div class="loading-spinner"></div>
+
+                <div>
+
+                    <strong>
+                        Airlock is protecting your prompt...
+                    </strong>
+
+                    <p id="loadingText">
+                        Scanning locally for sensitive information.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 ERROR
+                 ================================================= -->
+
+            <section
+                id="errorSection"
+                class="error-section hidden"
+            >
+
+                <div class="error-icon">
+                    ⚠️
+                </div>
+
+                <div>
+
+                    <h3>
+                        Something went wrong
+                    </h3>
+
+                    <p id="errorMessage">
+                        An unexpected error occurred.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 SECURITY SUMMARY
+                 ================================================= -->
+
+            <section
+                id="securitySection"
+                class="card hidden"
+            >
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h3>
+                            Security Scan
+                        </h3>
+
+                        <p>
+                            Airlock processed your prompt locally.
+                        </p>
+
+                    </div>
+
+                    <div
+                        id="policyBadge"
+                        class="policy-badge"
+                    >
+                        SANITIZED
+                    </div>
+
+                </div>
+
+
+                <div class="security-stats">
+
+                    <div class="stat">
+
+                        <span
+                            id="protectedCount"
+                            class="stat-number"
+                        >
+                            0
+                        </span>
+
+                        <span class="stat-label">
+                            Protected Items
+                        </span>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <span
+                            id="modelName"
+                            class="stat-value"
+                        >
+                            Gemini
+                        </span>
+
+                        <span class="stat-label">
+                            AI Model
+                        </span>
+
+                    </div>
+
+
+                    <div class="stat">
+
+                        <span
+                            id="processingTime"
+                            class="stat-value"
+                        >
+                            -
+                        </span>
+
+                        <span class="stat-label">
+                            Processing Time
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Protected entities -->
+
+                <div class="protected-items-container">
+
+                    <h4>
+                        Protected Information
+                    </h4>
+
+                    <div
+                        id="protectedItems"
+                        class="protected-items"
+                    >
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 SANITIZED PROMPT
+                 ================================================= -->
+
+            <section
+                id="sanitizedSection"
+                class="card hidden"
+            >
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h3>
+                            🔒 Secure Prompt
+                        </h3>
+
+                        <p>
+                            This is the exact prompt sent to Gemini.
+                        </p>
+
+                    </div>
+
+                    <span class="secure-badge">
+                        SAFE TO SEND
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="sanitizedPrompt"
+                    class="code-box"
+                >
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 GEMINI RESPONSE
+                 ================================================= -->
+
+            <section
+                id="llmSection"
+                class="card hidden"
+            >
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h3>
+                            ☁️ Gemini Response
+                        </h3>
+
+                        <p>
+                            This is the response received from Gemini.
+                        </p>
+
+                    </div>
+
+                    <span class="token-badge">
+                        TOKENS
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="llmResponse"
+                    class="response-box token-response"
+                >
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 FINAL RESPONSE
+                 ================================================= -->
+
+            <section
+                id="finalSection"
+                class="card final-card hidden"
+            >
+
+                <div class="card-header">
+
+                    <div>
+
+                        <h3>
+                            ✨ Final Answer
+                        </h3>
+
+                        <p>
+                            Airlock restored your private information
+                            locally.
+                        </p>
+
+                    </div>
+
+                    <span class="restored-badge">
+                        RESTORED LOCALLY
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="finalResponse"
+                    class="response-box"
+                >
+                </div>
+
+            </section>
+
+
+        </main>
+
+
+        <!-- =====================================================
+             FOOTER
+             ===================================================== -->
+
+        <footer class="footer">
+
+            <div>
+                🛡️ Airlock AI
+            </div>
+
+            <div>
+                Sensitive data is processed locally before
+                reaching the cloud AI.
+            </div>
+
+        </footer>
+
+    </div>
+
+
+    <!-- =========================================================
+         JAVASCRIPT
+         ========================================================= -->
+
+    <script
+        src="{{ url_for('static', filename='js/main.js') }}"
+    ></script>
+
+</body>
+
+</html>
