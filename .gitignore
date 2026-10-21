@@ -2,16 +2,16 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyd
 
 # Virtual environment
 venv/
 .venv/
+env/
 
 # Environment variables / secrets
 .env
 .env.*
-
-# Keep example environment files if we create them later
 !.env.example
 
 # Database files
@@ -22,8 +22,9 @@ venv/
 # macOS
 .DS_Store
 
-# VS Code
+# VS Code & IDEs
 .vscode/
+.idea/
 
 # Logs
 *.log
