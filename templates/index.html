@@ -3,480 +3,794 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Airlock AI - Enterprise Privacy Proxy & Security Gateway for Cloud LLMs">
+    <title>Airlock AI — Privacy Proxy &amp; LLM Guard</title>
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <!-- Typography: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <meta
-        name="description"
-        content="Airlock AI - Local Privacy Proxy and LLM Guard"
-    >
-
-    <title>Airlock AI</title>
-
-    <!--
-        Our stylesheet.
-
-        Flask serves files from the /static directory.
-    -->
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='css/style.css') }}"
-    >
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 
-
 <body>
+    <div class="airlock-app">
 
-    <!-- =====================================================
-         PAGE
-         ===================================================== -->
-
-    <div class="app">
-
-        <!-- =================================================
-             HEADER
-             ================================================= -->
-
-        <header class="header">
-
-            <div class="brand">
-
-                <div class="brand-icon">
-                    🛡️
+        <!-- =====================================================
+             TOP SYSTEM STATUS & NAVIGATION BAR
+             ===================================================== -->
+        <header class="topbar">
+            <div class="topbar-brand">
+                <div class="brand-shield">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="m9 12 2 2 4-4"/>
+                    </svg>
                 </div>
-
-                <div>
-                    <h1>Airlock AI</h1>
-
-                    <p>
-                        Privacy Proxy &amp; LLM Guard
-                    </p>
+                <div class="brand-titles">
+                    <div class="brand-name">AIRLOCK <span class="badge-tech">PROXY</span></div>
+                    <div class="brand-sub">Privacy Guard for Cloud LLMs</div>
                 </div>
-
             </div>
 
+            <!-- Traversing Navigation Tabs -->
+            <nav class="nav-tabs" id="navTabs" role="tablist">
+                <button class="nav-tab active" data-view="gateway" id="tabGateway">
+                    <span class="tab-kbd">1</span>
+                    <span class="tab-label">Proxy Gateway</span>
+                </button>
+                <button class="nav-tab" data-view="detector" id="tabDetector">
+                    <span class="tab-kbd">2</span>
+                    <span class="tab-label">Detection Engine</span>
+                </button>
+                <button class="nav-tab" data-view="policy" id="tabPolicy">
+                    <span class="tab-kbd">3</span>
+                    <span class="tab-label">Policy Matrix</span>
+                </button>
+                <button class="nav-tab" data-view="vault" id="tabVault">
+                    <span class="tab-kbd">4</span>
+                    <span class="tab-label">Privacy Vault</span>
+                </button>
+                <button class="nav-tab" data-view="telemetry" id="tabTelemetry">
+                    <span class="tab-kbd">5</span>
+                    <span class="tab-label">SOC Audit</span>
+                </button>
+                <button class="nav-tab" data-view="docs" id="tabDocs">
+                    <span class="tab-kbd">6</span>
+                    <span class="tab-label">API &amp; Docs</span>
+                </button>
+            </nav>
 
-            <div class="security-status">
-
-                <span class="status-dot"></span>
-
-                <span>
-                    Local Privacy Engine
-                </span>
-
+            <!-- Live Proxy Telemetry Heartbeat -->
+            <div class="topbar-actions">
+                <div class="heartbeat-pill" id="healthStatusPill" title="FastAPI Proxy Status">
+                    <span class="heartbeat-dot"></span>
+                    <span class="heartbeat-text" id="healthStatusText">Proxy Active</span>
+                </div>
+                <a href="/docs" target="_blank" class="topbar-btn" title="Open Swagger UI">
+                    <span>API /docs</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                </a>
             </div>
-
         </header>
 
-
-        <!-- =================================================
-             MAIN CONTENT
-             ================================================= -->
-
-        <main class="main-content">
-
+        <!-- =====================================================
+             MAIN TRAVERSING WORKSPACE
+             ===================================================== -->
+        <main class="workspace">
 
             <!-- =================================================
-                 INTRODUCTION
+                 PAGE 1: PROXY GATEWAY (LIVE EXECUTION STUDIO)
                  ================================================= -->
+            <section class="view-panel active" id="viewGateway" data-view="gateway">
+                <!-- Gateway Subheader & Quick Presets -->
+                <div class="panel-header">
+                    <div class="panel-intro">
+                        <h2>Secure LLM Proxy Gateway</h2>
+                        <p>All sensitive information is tokenized locally before sending to cloud AI. The cloud model never sees original PII.</p>
+                    </div>
 
-            <section class="hero">
-
-                <div class="hero-badge">
-                    🔒 Your sensitive data stays protected
+                    <div class="preset-strip">
+                        <span class="preset-label">Preset Tests:</span>
+                        <button class="preset-chip" data-preset="customer">Customer PII</button>
+                        <button class="preset-chip" data-preset="benchmark">False-Positive Benchmark</button>
+                        <button class="preset-chip" data-preset="devops">DevOps Credentials</button>
+                        <button class="preset-chip" data-preset="executive">HR &amp; Payroll</button>
+                    </div>
                 </div>
 
-                <h2>
-                    Ask AI without exposing
-                    <span>private information.</span>
-                </h2>
+                <!-- Two-Column Interactive Proxy Sandbox -->
+                <div class="gateway-grid">
 
-                <p>
-                    Airlock AI detects sensitive information locally,
-                    replaces it with secure tokens, sends only the
-                    sanitized prompt to Gemini, and restores your
-                    information locally in the final response.
-                </p>
+                    <!-- Left Column: Prompt Input & Controls -->
+                    <div class="card composer-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">✎</span>
+                                <h3>User Prompt Input</h3>
+                            </div>
+                            <div class="stream-toggle">
+                                <label class="switch-label">
+                                    <input type="checkbox" id="streamToggle" checked>
+                                    <span class="switch-slider"></span>
+                                    <span class="switch-text">Real-Time SSE Stream</span>
+                                </label>
+                            </div>
+                        </div>
 
+                        <div class="textarea-wrapper">
+                            <textarea
+                                id="promptInput"
+                                class="code-textarea"
+                                rows="8"
+                                placeholder="Enter any prompt with customer names, emails, cards, or technical framework names to test local privacy protection..."
+                            >Write a personalized welcome email to Rahul Sharma at rahul@gmail.com regarding his order of ₹45,000. Also mention that our backend is built on Flask and deployed for Acme Corp.</textarea>
+                        </div>
+
+                        <div class="composer-footer">
+                            <div class="prompt-meta">
+                                <span id="charCount">0 chars</span>
+                                <span class="divider-dot">•</span>
+                                <span class="security-tag"><span class="lock-icon">🔒</span> Zero Cloud Retention</span>
+                            </div>
+                            <div class="composer-actions">
+                                <button id="clearPromptBtn" class="btn-secondary" type="button">Clear</button>
+                                <button id="runProxyBtn" class="btn-primary" type="button">
+                                    <span class="btn-glow"></span>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                                    <span>Execute Secure Proxy</span>
+                                    <span class="kbd-hint">Ctrl+↵</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Pipeline Progress Visualizer -->
+                        <div class="pipeline-tracker" id="pipelineTracker">
+                            <div class="pipeline-step" data-step="detect">
+                                <div class="step-bullet">1</div>
+                                <div class="step-info">
+                                    <span class="step-name">Local NER Scan</span>
+                                    <span class="step-sub" id="scanSub">Regex &amp; spaCy</span>
+                                </div>
+                            </div>
+                            <div class="pipeline-connector"></div>
+                            <div class="pipeline-step" data-step="policy">
+                                <div class="step-bullet">2</div>
+                                <div class="step-info">
+                                    <span class="step-name">Policy Engine</span>
+                                    <span class="step-sub" id="policySub">ALLOW/BLOCK</span>
+                                </div>
+                            </div>
+                            <div class="pipeline-connector"></div>
+                            <div class="pipeline-step" data-step="vault">
+                                <div class="step-bullet">3</div>
+                                <div class="step-info">
+                                    <span class="step-name">Local Tokenization</span>
+                                    <span class="step-sub" id="vaultSub">In-Memory Vault</span>
+                                </div>
+                            </div>
+                            <div class="pipeline-connector"></div>
+                            <div class="pipeline-step" data-step="llm">
+                                <div class="step-bullet">4</div>
+                                <div class="step-info">
+                                    <span class="step-name">Cloud LLM</span>
+                                    <span class="step-sub" id="llmSub">Sanitized Payload</span>
+                                </div>
+                            </div>
+                            <div class="pipeline-connector"></div>
+                            <div class="pipeline-step" data-step="rehydrate">
+                                <div class="step-bullet">5</div>
+                                <div class="step-info">
+                                    <span class="step-name">Rehydration</span>
+                                    <span class="step-sub" id="rehydrateSub">Local Restore</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Verification Diffs & Telemetry -->
+                    <div class="gateway-results">
+
+                        <!-- Telemetry Metric Bar -->
+                        <div class="telemetry-bar">
+                            <div class="metric-pill">
+                                <span class="metric-name">Policy Verdict</span>
+                                <span class="metric-val verdict-badge" id="metricVerdict">STANDBY</span>
+                            </div>
+                            <div class="metric-pill">
+                                <span class="metric-name">Protected Entities</span>
+                                <span class="metric-val" id="metricProtected">0</span>
+                            </div>
+                            <div class="metric-pill">
+                                <span class="metric-name">Latency</span>
+                                <span class="metric-val" id="metricLatency">-</span>
+                            </div>
+                            <div class="metric-pill">
+                                <span class="metric-name">Cloud Exposure</span>
+                                <span class="metric-val highlight-green" id="metricExposure">0.0% PII</span>
+                            </div>
+                        </div>
+
+                        <!-- Detected Entities Chips -->
+                        <div class="card detection-preview-card" id="detectionPreviewCard">
+                            <div class="card-bar mini-bar">
+                                <span class="card-title-sm">INTERCEPTED SENSITIVE ENTITIES</span>
+                                <span class="shield-indicator" id="shieldCountIndicator">0 detected</span>
+                            </div>
+                            <div class="entity-chips-container" id="gatewayEntityChips">
+                                <span class="empty-hint">Execute a prompt to inspect intercepted sensitive entities...</span>
+                            </div>
+                        </div>
+
+                        <!-- Dual Diff View: Outbound Sanitized vs Inbound Rehydrated -->
+                        <div class="card diff-card">
+                            <div class="diff-header-tabs">
+                                <button class="diff-tab active" data-tab="sanitized">
+                                    <span class="diff-tab-icon">☁️</span>
+                                    <span>Outbound to Cloud (Sanitized)</span>
+                                    <span class="tag-secure">ZERO PII</span>
+                                </button>
+                                <button class="diff-tab" data-tab="raw-llm">
+                                    <span class="diff-tab-icon">🤖</span>
+                                    <span>Cloud LLM Raw Response</span>
+                                </button>
+                                <button class="diff-tab" data-tab="rehydrated">
+                                    <span class="diff-tab-icon">✨</span>
+                                    <span>Final Restored Response (Client)</span>
+                                    <span class="tag-local">LOCAL RESTORE</span>
+                                </button>
+                            </div>
+
+                            <!-- Tab 1: Outbound Sanitized (Proves zero PII sent to cloud) -->
+                            <div class="diff-content active" id="diffSanitized">
+                                <div class="diff-actions">
+                                    <span class="diff-note">This is the exact string transmitted to Gemini. Notice surrogate tokens:</span>
+                                    <button class="copy-btn" data-target="sanitizedText" title="Copy Outbound Prompt">Copy</button>
+                                </div>
+                                <div class="code-display" id="sanitizedText">Awaiting execution...</div>
+                            </div>
+
+                            <!-- Tab 2: Raw LLM Output (Contains surrogate tokens) -->
+                            <div class="diff-content" id="diffRawLLM">
+                                <div class="diff-actions">
+                                    <span class="diff-note">Raw response returned from cloud model containing tokens:</span>
+                                    <button class="copy-btn" data-target="rawLLMText" title="Copy LLM Response">Copy</button>
+                                </div>
+                                <div class="code-display" id="rawLLMText">Awaiting execution...</div>
+                            </div>
+
+                            <!-- Tab 3: Final Rehydrated Output -->
+                            <div class="diff-content" id="diffRehydrated">
+                                <div class="diff-actions">
+                                    <span class="diff-note">Local in-memory vault restored original values seamlessly:</span>
+                                    <button class="copy-btn" data-target="rehydratedText" title="Copy Final Response">Copy</button>
+                                </div>
+                                <div class="code-display formatted-display" id="rehydratedText">Awaiting execution...</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </section>
 
 
             <!-- =================================================
-                 PROMPT CARD
+                 PAGE 2: DETECTION ENGINE & FALSE-POSITIVE STUDIO
                  ================================================= -->
+            <section class="view-panel" id="viewDetector" data-view="detector">
+                <div class="panel-header">
+                    <div class="panel-intro">
+                        <h2>Detection Engine &amp; False-Positive Studio</h2>
+                        <p>Analyze how Airlock combines Regex and spaCy NER with false-positive suppression rules to eliminate erroneous classifications (such as "Flask" being misclassified as a location).</p>
+                    </div>
+                </div>
 
-            <section class="card prompt-card">
+                <div class="detector-layout">
+                    <!-- Scanner Input Card -->
+                    <div class="card detector-input-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">🔬</span>
+                                <h3>Entity Scanner Sandbox</h3>
+                            </div>
+                            <span class="badge-pill">Local Analysis</span>
+                        </div>
 
-                <div class="card-header">
+                        <div class="textarea-wrapper">
+                            <textarea
+                                id="detectorInput"
+                                class="code-textarea"
+                                rows="4"
+                                placeholder="Type any text to test detection and false-positive heuristics..."
+                            >I developed a REST API in Flask and FastAPI for Rahul Sharma (email: rahul.sharma@enterprise.com, phone: +91 9876543210, AWS Key: AKIAIOSFODNN7EXAMPLE). Deployed on Ubuntu for Acme Corp.</textarea>
+                        </div>
 
-                    <div>
-
-                        <h3>
-                            Your Prompt
-                        </h3>
-
-                        <p>
-                            Enter anything you want to ask the AI.
-                        </p>
-
+                        <div class="card-footer-flex">
+                            <span class="footer-hint">Live detection runs locally without leaving your machine.</span>
+                            <button id="scanDetectorBtn" class="btn-primary" type="button">
+                                <span>Scan &amp; Analyze Entities</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <span class="local-badge">
-                        LOCAL SCAN
-                    </span>
+                    <!-- Results Breakdown Cards -->
+                    <div class="detector-results-grid">
+                        <!-- Detected Entities Table -->
+                        <div class="card entity-table-card">
+                            <div class="card-bar">
+                                <div class="card-title">
+                                    <span class="status-indicator-green"></span>
+                                    <h3>Verified Sensitive Entities</h3>
+                                </div>
+                                <span class="count-badge" id="acceptedCount">0 verified</span>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table" id="acceptedTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Type</th>
+                                            <th>Value</th>
+                                            <th>Source</th>
+                                            <th>Confidence</th>
+                                            <th>Span</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="acceptedTableBody">
+                                        <tr><td colspan="5" class="empty-cell">Click "Scan &amp; Analyze Entities" to inspect.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
+                        <!-- Suppressed False-Positives (Highlighting the Flask solution!) -->
+                        <div class="card suppressed-table-card">
+                            <div class="card-bar">
+                                <div class="card-title">
+                                    <span class="status-indicator-amber"></span>
+                                    <h3>Suppressed False Positives</h3>
+                                </div>
+                                <span class="count-badge amber" id="suppressedCount">0 suppressed</span>
+                            </div>
+                            <div class="table-container">
+                                <table class="data-table" id="suppressedTable">
+                                    <thead>
+                                        <tr>
+                                            <th>Term</th>
+                                            <th>Raw spaCy Type</th>
+                                            <th>Suppression Rationale</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="suppressedTableBody">
+                                        <tr><td colspan="3" class="empty-cell">Click "Scan &amp; Analyze Entities" to inspect.</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="card-footer-tip">
+                                💡 <strong>Airlock Heuristic Shield:</strong> Technical frameworks (Flask, FastAPI, Python) and common nouns are automatically intercepted before reaching policy enforcement, preventing incorrect redactions.
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-
-                <!-- Prompt input -->
-
-                <textarea
-                    id="promptInput"
-                    class="prompt-input"
-                    placeholder="Example: Write an email to John Doe at john.doe@company.com about his ₹50,000 order..."
-                    rows="7"
-                ></textarea>
-
-
-                <!-- Input footer -->
-
-                <div class="input-footer">
-
-                    <span id="characterCount">
-                        0 characters
-                    </span>
-
-                    <button
-                        id="secureButton"
-                        class="primary-button"
-                        type="button"
-                    >
-
-                        <span class="button-icon">
-                            🔐
-                        </span>
-
-                        <span>
-                            Secure &amp; Ask AI
-                        </span>
-
-                    </button>
-
-                </div>
-
             </section>
 
 
             <!-- =================================================
-                 LOADING
+                 PAGE 3: POLICY MATRIX & GUARDRAILS
                  ================================================= -->
-
-            <section
-                id="loadingSection"
-                class="loading-section hidden"
-            >
-
-                <div class="loading-spinner"></div>
-
-                <div>
-
-                    <strong>
-                        Airlock is protecting your prompt...
-                    </strong>
-
-                    <p id="loadingText">
-                        Scanning locally for sensitive information.
-                    </p>
-
+            <section class="view-panel" id="viewPolicy" data-view="policy">
+                <div class="panel-header">
+                    <div class="panel-intro">
+                        <h2>Security Policy &amp; Guardrails Matrix</h2>
+                        <p>Configure actions per sensitive entity type. Choose whether to Allow, Sanitize (replace with surrogate tokens), or strictly Block transmission.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <button id="savePolicyBtn" class="btn-primary" type="button">
+                            <span>Save Policy Changes</span>
+                        </button>
+                    </div>
                 </div>
 
+                <div class="policy-layout-grid">
+                    <!-- Rule Matrix Table -->
+                    <div class="card policy-matrix-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">🛡️</span>
+                                <h3>Enforcement Actions by Category</h3>
+                            </div>
+                            <span class="badge-pill">Dynamic Runtime Config</span>
+                        </div>
+
+                        <div class="table-container">
+                            <table class="data-table policy-table">
+                                <thead>
+                                    <tr>
+                                        <th>Entity Category</th>
+                                        <th>Description</th>
+                                        <th>Policy Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="policyTableBody">
+                                    <!-- Populated dynamically by main.js -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Custom Allowlist & Exceptions -->
+                    <div class="policy-sidebar">
+                        <div class="card allowlist-card">
+                            <div class="card-bar">
+                                <div class="card-title">
+                                    <span class="card-icon">✓</span>
+                                    <h3>Custom Corporate Allowlist</h3>
+                                </div>
+                            </div>
+                            <p class="card-desc">Terms in this list are never redacted or blocked (e.g., your company name or public product).</p>
+
+                            <div class="allowlist-input-group">
+                                <input type="text" id="allowlistInput" placeholder="Add word (e.g. AcmeCorp, Airlock)..." class="text-input">
+                                <button id="addAllowlistBtn" class="btn-secondary" type="button">Add</button>
+                            </div>
+
+                            <div class="tag-cloud" id="allowlistTagCloud">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="card rules-info-card">
+                            <div class="card-bar">
+                                <div class="card-title">
+                                    <span class="card-icon">ℹ️</span>
+                                    <h3>Enforcement Glossary</h3>
+                                </div>
+                            </div>
+                            <div class="glossary-item">
+                                <span class="tag-action allow">ALLOW</span>
+                                <p>Sends raw value to LLM. Used for public URLs or general references.</p>
+                            </div>
+                            <div class="glossary-item">
+                                <span class="tag-action sanitize">SANITIZE</span>
+                                <p>Replaces value with local token <code>&lt;TYPE_1&gt;</code> and rehydrates after. Zero cloud retention.</p>
+                            </div>
+                            <div class="glossary-item">
+                                <span class="tag-action block">BLOCK</span>
+                            <p>Rejects request with 403 Forbidden. Recommended for AWS/API secret keys.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </section>
 
 
             <!-- =================================================
-                 ERROR
+                 PAGE 4: PRIVACY VAULT & IN-MEMORY TOKEN STORE
                  ================================================= -->
-
-            <section
-                id="errorSection"
-                class="error-section hidden"
-            >
-
-                <div class="error-icon">
-                    ⚠️
+            <section class="view-panel" id="viewVault" data-view="vault">
+                <div class="panel-header">
+                    <div class="panel-intro">
+                        <h2>Cryptographic Privacy Vault</h2>
+                        <p>In-memory reversible surrogate token registry. Mapping tables are isolated strictly in local process memory and zeroized upon request completion.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <button id="purgeVaultBtn" class="btn-danger" type="button">
+                            <span>Zeroize / Purge In-Memory Vault</span>
+                        </button>
+                    </div>
                 </div>
 
-                <div>
+                <div class="vault-grid">
+                    <!-- Vault Architecture & Security Properties -->
+                    <div class="card vault-info-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">🔐</span>
+                                <h3>Zero-Data-Retention Architecture</h3>
+                            </div>
+                            <span class="badge-pill green">Process-Isolated</span>
+                        </div>
+                        <div class="vault-features">
+                            <div class="vfeature">
+                                <div class="vicon">🛡️</div>
+                                <div>
+                                    <h4>Request-Scoped Lifetime</h4>
+                                    <p>Vault mappings exist only during the lifecycle of the proxy transaction and are zeroized immediately upon client delivery.</p>
+                                </div>
+                            </div>
+                            <div class="vfeature">
+                                <div class="vicon">⚡</div>
+                                <div>
+                                    <h4>Deterministic Token Collisions Prevention</h4>
+                                    <p>Identical entities in the prompt receive matching tokens (e.g. John Doe appears twice &rarr; both mapped to &lt;PERSON_1&gt;).</p>
+                                </div>
+                            </div>
+                            <div class="vfeature">
+                                <div class="vicon">🔒</div>
+                                <div>
+                                    <h4>Collision-Free Boundary Rehydration</h4>
+                                    <p>Rehydration replaces longest tokens first using token boundaries to prevent accidental partial substring substitution.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    <h3>
-                        Something went wrong
-                    </h3>
-
-                    <p id="errorMessage">
-                        An unexpected error occurred.
-                    </p>
-
+                    <!-- Active Session Tokens Table -->
+                    <div class="card vault-table-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">📋</span>
+                                <h3>Surrogate Token Mapping Table</h3>
+                            </div>
+                            <span class="count-badge" id="vaultEntryCount">0 tokens</span>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table" id="vaultTable">
+                                <thead>
+                                    <tr>
+                                        <th>Surrogate Token</th>
+                                        <th>Entity Category</th>
+                                        <th>Masked Local Memory</th>
+                                        <th>Entropy / Length</th>
+                                        <th>Created</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="vaultTableBody">
+                                    <tr><td colspan="5" class="empty-cell">Execute a prompt in the Gateway to inspect generated surrogate tokens.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
-
             </section>
 
 
             <!-- =================================================
-                 SECURITY SUMMARY
+                 PAGE 5: SOC AUDIT & TELEMETRY STREAM
                  ================================================= -->
-
-            <section
-                id="securitySection"
-                class="card hidden"
-            >
-
-                <div class="card-header">
-
-                    <div>
-
-                        <h3>
-                            Security Scan
-                        </h3>
-
-                        <p>
-                            Airlock processed your prompt locally.
-                        </p>
-
+            <section class="view-panel" id="viewTelemetry" data-view="telemetry">
+                <div class="panel-header">
+                    <div class="panel-intro">
+                        <h2>Security Operations Center (SOC) Telemetry</h2>
+                        <p>Real-time audit log of intercepted proxy transactions, latency metrics, and PII threat prevention statistics.</p>
                     </div>
-
-                    <div
-                        id="policyBadge"
-                        class="policy-badge"
-                    >
-                        SANITIZED
+                    <div class="panel-actions">
+                        <button id="exportAuditBtn" class="btn-secondary" type="button">
+                            <span>Export Audit Log (JSON)</span>
+                        </button>
                     </div>
-
                 </div>
 
-
-                <div class="security-stats">
-
-                    <div class="stat">
-
-                        <span
-                            id="protectedCount"
-                            class="stat-number"
-                        >
-                            0
-                        </span>
-
-                        <span class="stat-label">
-                            Protected Items
-                        </span>
-
+                <!-- Metrics Dashboard Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-title">TOTAL TRANSACTIONS</div>
+                        <div class="kpi-val" id="kpiTotal">0</div>
+                        <div class="kpi-sub">All proxy requests</div>
                     </div>
-
-
-                    <div class="stat">
-
-                        <span
-                            id="modelName"
-                            class="stat-value"
-                        >
-                            Gemini
-                        </span>
-
-                        <span class="stat-label">
-                            AI Model
-                        </span>
-
+                    <div class="kpi-card">
+                        <div class="kpi-title">ENTITIES SHIELDED</div>
+                        <div class="kpi-val highlight-green" id="kpiShielded">0</div>
+                        <div class="kpi-sub">PII prevented from cloud leak</div>
                     </div>
-
-
-                    <div class="stat">
-
-                        <span
-                            id="processingTime"
-                            class="stat-value"
-                        >
-                            -
-                        </span>
-
-                        <span class="stat-label">
-                            Processing Time
-                        </span>
-
+                    <div class="kpi-card">
+                        <div class="kpi-title">CREDENTIAL BLOCKS</div>
+                        <div class="kpi-val highlight-amber" id="kpiBlocked">0</div>
+                        <div class="kpi-sub">Hard secrets rejected</div>
                     </div>
-
+                    <div class="kpi-card">
+                        <div class="kpi-title">AVG OVERHEAD</div>
+                        <div class="kpi-val highlight-blue" id="kpiLatency">0 ms</div>
+                        <div class="kpi-sub">Local proxy latency</div>
+                    </div>
                 </div>
 
-
-                <!-- Protected entities -->
-
-                <div class="protected-items-container">
-
-                    <h4>
-                        Protected Information
-                    </h4>
-
-                    <div
-                        id="protectedItems"
-                        class="protected-items"
-                    >
+                <!-- Transaction Audit Stream Table -->
+                <div class="card audit-card">
+                    <div class="card-bar">
+                        <div class="card-title">
+                            <span class="card-icon">⚡</span>
+                            <h3>Real-Time Transaction Audit Log</h3>
+                        </div>
+                        <span class="badge-pill">Continuous Stream</span>
                     </div>
 
+                    <div class="table-container">
+                        <table class="data-table" id="auditTable">
+                            <thead>
+                                <tr>
+                                    <th>Event ID</th>
+                                    <th>Timestamp</th>
+                                    <th>Decision</th>
+                                    <th>Shielded Count</th>
+                                    <th>Detected Types</th>
+                                    <th>Total Latency</th>
+                                    <th>Target Model</th>
+                                    <th>Prompt Preview</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody">
+                                <tr><td colspan="8" class="empty-cell">No transactions recorded yet. Run a prompt in the Gateway to generate audit telemetry.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-
             </section>
 
 
             <!-- =================================================
-                 SANITIZED PROMPT
+                 PAGE 6: API INTEGRATION & DEVELOPER DOCS
                  ================================================= -->
+            <section class="view-panel" id="viewDocs" data-view="docs">
+                <div class="panel-header">
+                    <div class="panel-intro">
+                        <h2>Developer Integration &amp; API Reference</h2>
+                        <p>Drop-in privacy middleware integration for Python, cURL, or LangChain. Route prompts through Airlock AI with zero client code redesign.</p>
+                    </div>
+                    <div class="panel-actions">
+                        <a href="/docs" target="_blank" class="btn-primary">
+                            <span>Open Interactive Swagger UI</span>
+                        </a>
+                    </div>
+                </div>
 
-            <section
-                id="sanitizedSection"
-                class="card hidden"
-            >
-
-                <div class="card-header">
-
-                    <div>
-
-                        <h3>
-                            🔒 Secure Prompt
-                        </h3>
-
-                        <p>
-                            This is the exact prompt sent to Gemini.
-                        </p>
-
+                <div class="docs-grid">
+                    <!-- cURL Integration -->
+                    <div class="card code-doc-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">⌨</span>
+                                <h3>cURL Command Example</h3>
+                            </div>
+                            <button class="copy-btn" data-target="curlSnippet">Copy</button>
+                        </div>
+                        <pre class="code-block" id="curlSnippet"><code>curl -X POST "http://127.0.0.1:8000/api/v1/secure-chat" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Email Rahul Sharma at rahul@gmail.com regarding account order #401",
+    "stream": false
+  }'</code></pre>
                     </div>
 
-                    <span class="secure-badge">
-                        SAFE TO SEND
-                    </span>
+                    <!-- Python SDK Integration -->
+                    <div class="card code-doc-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">🐍</span>
+                                <h3>Python Drop-in Wrapper</h3>
+                            </div>
+                            <button class="copy-btn" data-target="pythonSnippet">Copy</button>
+                        </div>
+                        <pre class="code-block" id="pythonSnippet"><code>import requests
 
-                </div>
+def ask_airlock(prompt: str) -> str:
+    """Drop-in privacy proxy for cloud LLMs."""
+    response = requests.post(
+        "http://127.0.0.1:8000/api/v1/secure-chat",
+        json={"prompt": prompt}
+    )
+    data = response.json()
+    if not data.get("success"):
+        raise RuntimeError(f"Airlock blocked: {data.get('message')}")
+    # Return locally restored answer
+    return data["final_response"]
 
-
-                <div
-                    id="sanitizedPrompt"
-                    class="code-box"
-                >
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 GEMINI RESPONSE
-                 ================================================= -->
-
-            <section
-                id="llmSection"
-                class="card hidden"
-            >
-
-                <div class="card-header">
-
-                    <div>
-
-                        <h3>
-                            ☁️ Gemini Response
-                        </h3>
-
-                        <p>
-                            This is the response received from Gemini.
-                        </p>
-
+# The cloud model receives only <PERSON_1> and <EMAIL_1>
+answer = ask_airlock("Contact Alice Cooper at alice@company.com")
+print(answer)</code></pre>
                     </div>
 
-                    <span class="token-badge">
-                        TOKENS
-                    </span>
+                    <!-- Real-Time SSE Stream Example -->
+                    <div class="card code-doc-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">⚡</span>
+                                <h3>FastAPI Server-Sent Events (SSE) Stream</h3>
+                            </div>
+                            <button class="copy-btn" data-target="sseSnippet">Copy</button>
+                        </div>
+                        <pre class="code-block" id="sseSnippet"><code>const response = await fetch("http://127.0.0.1:8000/api/v1/secure-chat/stream", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ prompt: "My secret data..." })
+});
 
-                </div>
-
-
-                <div
-                    id="llmResponse"
-                    class="response-box token-response"
-                >
-                </div>
-
-            </section>
-
-
-            <!-- =================================================
-                 FINAL RESPONSE
-                 ================================================= -->
-
-            <section
-                id="finalSection"
-                class="card final-card hidden"
-            >
-
-                <div class="card-header">
-
-                    <div>
-
-                        <h3>
-                            ✨ Final Answer
-                        </h3>
-
-                        <p>
-                            Airlock restored your private information
-                            locally.
-                        </p>
-
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  console.log(decoder.decode(value));
+}</code></pre>
                     </div>
 
-                    <span class="restored-badge">
-                        RESTORED LOCALLY
-                    </span>
-
+                    <!-- Endpoints Architecture Overview -->
+                    <div class="card api-endpoints-card">
+                        <div class="card-bar">
+                            <div class="card-title">
+                                <span class="card-icon">🔌</span>
+                                <h3>Registered FastAPI Endpoints</h3>
+                            </div>
+                        </div>
+                        <div class="endpoints-list">
+                            <div class="endpoint-row">
+                                <span class="http-badge post">POST</span>
+                                <code>/api/v1/secure-chat</code>
+                                <span class="endpoint-desc">End-to-end privacy proxy pipeline (JSON)</span>
+                            </div>
+                            <div class="endpoint-row">
+                                <span class="http-badge post">POST</span>
+                                <code>/api/v1/secure-chat/stream</code>
+                                <span class="endpoint-desc">Real-time Server-Sent Events (SSE) proxy pipeline</span>
+                            </div>
+                            <div class="endpoint-row">
+                                <span class="http-badge post">POST</span>
+                                <code>/api/v1/detect</code>
+                                <span class="endpoint-desc">Direct NER inspection &amp; false-positive analysis</span>
+                            </div>
+                            <div class="endpoint-row">
+                                <span class="http-badge get">GET</span>
+                                <code>/api/v1/policy</code>
+                                <span class="endpoint-desc">Retrieve active security policy rules &amp; allowlist</span>
+                            </div>
+                            <div class="endpoint-row">
+                                <span class="http-badge put">PUT</span>
+                                <code>/api/v1/policy</code>
+                                <span class="endpoint-desc">Dynamically update policy rules at runtime</span>
+                            </div>
+                            <div class="endpoint-row">
+                                <span class="http-badge get">GET</span>
+                                <code>/api/v1/vault/active</code>
+                                <span class="endpoint-desc">Inspect in-memory surrogate token sessions</span>
+                            </div>
+                            <div class="endpoint-row">
+                                <span class="http-badge delete">DELETE</span>
+                                <code>/api/v1/vault/purge</code>
+                                <span class="endpoint-desc">Immediate memory zeroization of all active vaults</span>
+                            </div>
+                            <div class="endpoint-row">
+                                <span class="http-badge get">GET</span>
+                                <code>/api/v1/telemetry</code>
+                                <span class="endpoint-desc">Real-time throughput and PII defense metrics</span>
+                            </div>
+                            <div class="endpoint-row">
+                                <span class="http-badge get">GET</span>
+                                <code>/api/v1/health</code>
+                                <span class="endpoint-desc">FastAPI and privacy engine health status</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-
-                <div
-                    id="finalResponse"
-                    class="response-box"
-                >
-                </div>
-
             </section>
-
 
         </main>
 
-
         <!-- =====================================================
-             FOOTER
+             FOOTER BAR
              ===================================================== -->
-
-        <footer class="footer">
-
-            <div>
-                🛡️ Airlock AI
+        <footer class="app-footer">
+            <div class="footer-left">
+                <span class="brand-monogram">AIRLOCK AI</span>
+                <span class="divider-pipe">|</span>
+                <span>FastAPI Microservice Architecture</span>
+                <span class="divider-pipe">|</span>
+                <span id="footerModel">Gemini Gateway</span>
             </div>
-
-            <div>
-                Sensitive data is processed locally before
-                reaching the cloud AI.
+            <div class="footer-right">
+                <span class="status-clean"><span class="dot-green"></span> In-Memory Vault Active</span>
             </div>
-
         </footer>
 
     </div>
 
-
-    <!-- =========================================================
-         JAVASCRIPT
-         ========================================================= -->
-
-    <script
-        src="{{ url_for('static', filename='js/main.js') }}"
-    ></script>
-
+    <!-- Frontend Controller -->
+    <script src="/static/main.js"></script>
 </body>
 
 </html>
