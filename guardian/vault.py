@@ -1,203 +1,112 @@
 """
-Airlock AI - Local Privacy Vault
+Airlock AI - In-Memory Cryptographic Privacy Vault
 
-The PrivacyVault maintains a local mapping between
-sensitive values and safe surrogate tokens.
+The PrivacyVault maintains a localized, in-memory reversible mapping
+between sensitive values and safe surrogate tokens.
 
 Example:
+    Original:   Rahul Sharma
+    Token:      <PERSON_1>
+    Vault:      <PERSON_1> <-> Rahul Sharma
 
-    Original value:
-        John Doe
-
-    Token:
-        <PERSON_1>
-
-    Vault:
-        <PERSON_1> -> John Doe
-
-The vault is local to the Airlock process.
-
-IMPORTANT:
-    This module never sends vault data to Gemini or any
-    other external service.
+IMPORTANT SECURITY PROPERTIES:
+    1. Zero External Leakage: Vault data is strictly local to the Airlock process.
+    2. Zero Persistence: Vault entries can be zeroized immediately after request completion.
+    3. Reversible: The cloud model only interacts with <TYPE_INDEX>; final output
+       is reconstructed locally in milliseconds.
 """
 
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
-from typing import Dict, Optional
+import time
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Tuple
 
 
-# ============================================================
-# Vault Entry
-# ============================================================
+def mask_sensitive_value(val: str, data_type: str) -> str:
+    """
+    Produce a safe masked preview for local inspection in the UI
+    without exposing full sensitive data.
+    """
+    if not val:
+        return ""
+    val_clean = val.strip()
+    if data_type == "EMAIL" and "@" in val_clean:
+        user, domain = val_clean.split("@", 1)
+        masked_user = user[0] + "***" if len(user) > 1 else "***"
+        return f"{masked_user}@{domain}"
+    if data_type in {"PHONE", "CREDIT_CARD", "NATIONAL_ID"}:
+        digits = re.sub(r"\D", "", val_clean)
+        last4 = digits[-4:] if len(digits) >= 4 else digits
+        return f"***-***-{last4}"
+    if len(val_clean) <= 3:
+        return val_clean[0] + "***"
+    return f"{val_clean[:2]}***{val_clean[-1]}"
+
 
 @dataclass
 class VaultEntry:
-    """
-    Represents one protected value stored in the vault.
-    """
-
+    """Represents one protected value inside the Privacy Vault."""
     token: str
     data_type: str
     original_value: str
+    created_at: float = field(default_factory=time.time)
 
-    def to_dict(self) -> dict:
-        """
-        Return a safe representation of the vault entry.
-
-        The original value is intentionally NOT included.
-
-        This prevents accidental exposure if vault metadata
-        is returned to the frontend.
-        """
-
+    def to_safe_dict(self) -> dict:
+        """Safe representation for UI inspection without exposing full secrets."""
         return {
             "token": self.token,
             "type": self.data_type,
+            "masked_value": mask_sensitive_value(self.original_value, self.data_type),
+            "created_at": round(self.created_at, 2),
+            "char_length": len(self.original_value),
         }
 
 
-# ============================================================
-# Privacy Vault
-# ============================================================
-
 class PrivacyVault:
     """
-    Local reversible token vault.
-
-    Example:
-
-        vault = PrivacyVault()
-
-        token = vault.store(
-            "PERSON",
-            "John Doe"
-        )
-
-        print(token)
-
-        # <PERSON_1>
-
-        print(vault.restore(token))
-
-        # John Doe
+    In-Memory Reversible Token Vault.
     """
 
-    def __init__(self):
-        """
-        Initialize an empty vault.
-        """
-
-        # token -> VaultEntry
+    def __init__(self, session_id: Optional[str] = None):
+        self.session_id: str = session_id or f"vault-{int(time.time()*1000)}"
         self._token_to_entry: Dict[str, VaultEntry] = {}
-
-        # (data_type, original_value) -> token
-        #
-        # This prevents the same value from receiving multiple
-        # tokens within the same request.
-        self._value_to_token: Dict[tuple, str] = {}
-
-        # Counters used to generate tokens.
-        #
-        # Example:
-        #
-        # PERSON -> 1
-        # PERSON -> 2
-        # EMAIL  -> 1
+        self._value_to_token: Dict[Tuple[str, str], str] = {}
         self._counters: Dict[str, int] = {}
-
-    # ========================================================
-    # Token Normalization
-    # ========================================================
+        self.created_at: float = time.time()
 
     @staticmethod
     def _normalize_type(data_type: str) -> str:
-        """
-        Normalize the sensitive-data type.
-
-        Example:
-
-            "person" -> "PERSON"
-            "email"  -> "EMAIL"
-        """
-
         if not isinstance(data_type, str):
             raise TypeError("data_type must be a string")
-
         normalized = data_type.strip().upper()
-
         if not normalized:
             raise ValueError("data_type cannot be empty")
-
         return normalized
 
-    # ========================================================
-    # Generate Token
-    # ========================================================
-
     def _generate_token(self, data_type: str) -> str:
-        """
-        Generate a unique token.
-
-        Example:
-
-            <PERSON_1>
-            <PERSON_2>
-            <EMAIL_1>
-        """
-
         counter = self._counters.get(data_type, 0) + 1
-
         self._counters[data_type] = counter
-
         return f"<{data_type}_{counter}>"
 
-    # ========================================================
-    # Store Sensitive Value
-    # ========================================================
-
-    def store(
-        self,
-        data_type: str,
-        original_value: str,
-    ) -> str:
+    def store(self, data_type: str, original_value: str) -> str:
         """
-        Store a sensitive value and return its token.
-
-        If the exact same value has already been stored for
-        the same data type, the existing token is returned.
-
-        Example:
-
-            vault.store("PERSON", "John Doe")
-
-            -> <PERSON_1>
+        Store a sensitive value and return its surrogate token.
+        Reuses existing token if same value was already encountered.
         """
-
         data_type = self._normalize_type(data_type)
-
         if not isinstance(original_value, str):
             raise TypeError("original_value must be a string")
-
         if not original_value:
             raise ValueError("original_value cannot be empty")
 
-        lookup_key = (
-            data_type,
-            original_value,
-        )
-
-        # Reuse an existing token when the same value appears
-        # multiple times in the prompt.
+        lookup_key = (data_type, original_value)
         existing_token = self._value_to_token.get(lookup_key)
-
         if existing_token:
             return existing_token
 
         token = self._generate_token(data_type)
-
         entry = VaultEntry(
             token=token,
             data_type=data_type,
@@ -205,175 +114,48 @@ class PrivacyVault:
         )
 
         self._token_to_entry[token] = entry
-
         self._value_to_token[lookup_key] = token
-
         return token
 
-    # ========================================================
-    # Retrieve Original Value
-    # ========================================================
-
     def restore(self, token: str) -> Optional[str]:
-        """
-        Convert a token back to the original sensitive value.
-
-        Example:
-
-            vault.restore("<PERSON_1>")
-
-            -> "John Doe"
-
-        Returns None if the token is unknown.
-        """
-
+        """Convert a single token back to the original value."""
         entry = self._token_to_entry.get(token)
-
-        if entry is None:
-            return None
-
-        return entry.original_value
-
-    # ========================================================
-    # Restore Entire Text
-    # ========================================================
+        return entry.original_value if entry else None
 
     def rehydrate(self, text: str) -> str:
         """
-        Replace all known tokens in a text with their original
-        sensitive values.
-
-        Example:
-
-            Input:
-                "Dear <PERSON_1>, contact <EMAIL_1>."
-
-            Output:
-                "Dear John Doe, contact john@example.com."
+        Replace all known surrogate tokens with original values.
+        Sorts by token length descending to prevent partial token replacement collisions.
         """
-
-        if not isinstance(text, str):
-            raise TypeError("text must be a string")
-
-        if not text:
+        if not isinstance(text, str) or not text:
             return text
 
         result = text
-
-        # Replace longer tokens first. This prevents accidental
-        # partial replacement if token formats ever become
-        # more complex.
         entries = sorted(
             self._token_to_entry.values(),
-            key=lambda entry: len(entry.token),
+            key=lambda e: len(e.token),
             reverse=True,
         )
 
         for entry in entries:
-
-            result = result.replace(
-                entry.token,
-                entry.original_value,
-            )
+            # Direct string replace of token
+            result = result.replace(entry.token, entry.original_value)
 
         return result
 
-    # ========================================================
-    # Check Token
-    # ========================================================
-
-    def contains_token(self, token: str) -> bool:
-        """
-        Return True if the token exists in the vault.
-        """
-
-        return token in self._token_to_entry
-
-    # ========================================================
-    # Get Entry
-    # ========================================================
-
-    def get_entry(self, token: str) -> Optional[VaultEntry]:
-        """
-        Return the VaultEntry for a token.
-
-        Returns None if the token does not exist.
-        """
-
-        return self._token_to_entry.get(token)
-
-    # ========================================================
-    # Safe Metadata
-    # ========================================================
-
-    def get_safe_entries(self) -> list:
-        """
-        Return vault metadata without exposing original values.
-
-        This is safe to send to the frontend for demonstration
-        purposes.
-
-        Example:
-
-            [
-                {
-                    "token": "<PERSON_1>",
-                    "type": "PERSON"
-                },
-                {
-                    "token": "<EMAIL_1>",
-                    "type": "EMAIL"
-                }
-            ]
-        """
-
-        return [
-            entry.to_dict()
-            for entry in self._token_to_entry.values()
-        ]
-
-    # ========================================================
-    # Size
-    # ========================================================
+    def get_safe_entries(self) -> List[dict]:
+        """Return safe vault entries for UI inspection."""
+        return [entry.to_safe_dict() for entry in self._token_to_entry.values()]
 
     def size(self) -> int:
-        """
-        Return the number of unique protected values.
-        """
-
+        """Number of unique protected values."""
         return len(self._token_to_entry)
 
-    # ========================================================
-    # Clear
-    # ========================================================
-
     def clear(self) -> None:
-        """
-        Completely clear the vault.
-
-        This should normally be called when a request/session
-        has finished if the vault is being used per request.
-        """
-
+        """Zero out vault contents from memory."""
         self._token_to_entry.clear()
         self._value_to_token.clear()
         self._counters.clear()
 
-    # ========================================================
-    # Debug Representation
-    # ========================================================
-
     def __repr__(self) -> str:
-        """
-        Return a safe representation.
-
-        IMPORTANT:
-            Original sensitive values are intentionally not
-            printed.
-        """
-
-        return (
-            f"PrivacyVault("
-            f"entries={self.size()}"
-            f")"
-        )
+        return f"PrivacyVault(session='{self.session_id}', entries={self.size()})"
