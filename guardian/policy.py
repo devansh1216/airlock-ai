@@ -1,281 +1,208 @@
 """
-Airlock AI - Security Policy
+Airlock AI - Security Policy Engine
 
-This module decides how Airlock AI should handle a prompt
-after sensitive information has been detected.
+This module decides how Airlock AI handles detected sensitive information:
+    - ALLOW: Pass through to cloud AI without modification
+    - SANITIZE: Replace with local surrogate tokens, restore locally after LLM responds
+    - BLOCK: Reject the request immediately (e.g. for hard credentials / AWS keys)
 
-The policy layer does NOT:
-    - call Gemini
-    - access the internet
-    - modify the user's prompt
-    - store sensitive information
-
-Its responsibility is simply to make a security decision.
-
-Possible decisions:
-
-    ALLOW
-        No sensitive information was detected.
-
-    SANITIZE
-        Sensitive information was detected, but the prompt
-        can safely continue after local redaction.
-
-    BLOCK
-        The request contains information that Airlock should
-        not send to the external LLM.
+The policy can be dynamically updated at runtime via the API/Frontend.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional
+from typing import Dict, List, Optional, Set
 
 from guardian.detector import Detection
 
 
-# ============================================================
-# Policy Decisions
-# ============================================================
-
 class PolicyDecision(str, Enum):
-    """
-    Possible security decisions.
-    """
-
+    """Possible security decisions."""
     ALLOW = "ALLOW"
     SANITIZE = "SANITIZE"
     BLOCK = "BLOCK"
 
 
-# ============================================================
-# Policy Result
-# ============================================================
-
 @dataclass
 class PolicyResult:
-    """
-    Result returned by the security policy engine.
-    """
-
+    """Result returned by the security policy engine."""
     decision: PolicyDecision
     reason: str
     detections: List[Detection]
     blocked_types: List[str]
+    sanitized_types: List[str] = field(default_factory=list)
+    allowed_types: List[str] = field(default_factory=list)
 
     @property
     def allowed(self) -> bool:
-        """
-        Return True when the request can continue.
-        """
-
+        """Return True when the request is permitted to proceed."""
         return self.decision != PolicyDecision.BLOCK
 
     @property
     def requires_sanitization(self) -> bool:
-        """
-        Return True when sensitive information was detected
-        and the prompt should be sanitized.
-        """
-
+        """Return True when sensitive information must be replaced with surrogate tokens."""
         return self.decision == PolicyDecision.SANITIZE
 
     def to_dict(self) -> dict:
-        """
-        Convert the result to a JSON-friendly dictionary.
-        """
-
+        """Convert the result to a JSON-friendly dictionary."""
         return {
             "decision": self.decision.value,
             "reason": self.reason,
             "allowed": self.allowed,
             "requires_sanitization": self.requires_sanitization,
             "blocked_types": self.blocked_types,
-            "detections": [
-                detection.to_dict()
-                for detection in self.detections
-            ],
+            "sanitized_types": self.sanitized_types,
+            "allowed_types": self.allowed_types,
+            "detections": [d.to_dict() for d in self.detections],
         }
 
 
-# ============================================================
-# Security Policy
-# ============================================================
-
 class SecurityPolicy:
     """
-    Airlock AI security policy engine.
-
-    By default, Airlock sanitizes detected PII instead of
-    blocking the user's request.
-
-    Only explicitly blocked data types cause a BLOCK decision.
-
-    This makes the system useful for normal business tasks
-    such as:
-
-        "Write an email to John Doe at john@example.com."
-
-    The prompt becomes:
-
-        "Write an email to <PERSON_1> at <EMAIL_1>."
-
-    and continues to Gemini.
+    Configurable security policy engine.
     """
 
-    DEFAULT_BLOCKED_TYPES = {
+    DEFAULT_BLOCKED_TYPES: Set[str] = {
         "AWS_ACCESS_KEY",
+        "API_KEY",
     }
 
-    DEFAULT_SANITIZE_TYPES = {
+    DEFAULT_SANITIZE_TYPES: Set[str] = {
         "PERSON",
         "EMAIL",
         "PHONE",
         "CREDIT_CARD",
         "IP_ADDRESS",
-        "URL",
-        "UUID",
-        "API_KEY",
-        "AWS_ACCESS_KEY",
+        "NATIONAL_ID",
         "ORGANIZATION",
         "LOCATION",
+        "UUID",
     }
+
+    DEFAULT_ALLOW_TYPES: Set[str] = {
+        "URL",
+    }
+
+    ALL_KNOWN_TYPES: List[str] = [
+        "PERSON",
+        "EMAIL",
+        "PHONE",
+        "CREDIT_CARD",
+        "IP_ADDRESS",
+        "NATIONAL_ID",
+        "ORGANIZATION",
+        "LOCATION",
+        "API_KEY",
+        "AWS_ACCESS_KEY",
+        "URL",
+        "UUID",
+    ]
 
     def __init__(
         self,
-        blocked_types: Optional[set[str]] = None,
-        sanitize_types: Optional[set[str]] = None,
+        blocked_types: Optional[Set[str]] = None,
+        sanitize_types: Optional[Set[str]] = None,
+        allow_types: Optional[Set[str]] = None,
     ):
-        """
-        Initialize the security policy.
-
-        Parameters
-        ----------
-        blocked_types:
-            Types that should immediately block a request.
-
-        sanitize_types:
-            Types that should be replaced with secure tokens.
-        """
-
-        self.blocked_types = (
-            set(blocked_types)
-            if blocked_types is not None
-            else set(self.DEFAULT_BLOCKED_TYPES)
+        self.blocked_types: Set[str] = (
+            set(blocked_types) if blocked_types is not None else set(self.DEFAULT_BLOCKED_TYPES)
+        )
+        self.sanitize_types: Set[str] = (
+            set(sanitize_types) if sanitize_types is not None else set(self.DEFAULT_SANITIZE_TYPES)
+        )
+        self.allow_types: Set[str] = (
+            set(allow_types) if allow_types is not None else set(self.DEFAULT_ALLOW_TYPES)
         )
 
-        self.sanitize_types = (
-            set(sanitize_types)
-            if sanitize_types is not None
-            else set(self.DEFAULT_SANITIZE_TYPES)
-        )
-
-    # ========================================================
-    # Evaluate Prompt
-    # ========================================================
-
-    def evaluate(
+    def update_rules(
         self,
-        detections: List[Detection],
-    ) -> PolicyResult:
+        blocked: Optional[List[str]] = None,
+        sanitize: Optional[List[str]] = None,
+        allow: Optional[List[str]] = None,
+    ) -> None:
+        """Update active policy rules at runtime."""
+        if blocked is not None:
+            self.blocked_types = {t.upper().strip() for t in blocked if t.strip()}
+        if sanitize is not None:
+            self.sanitize_types = {t.upper().strip() for t in sanitize if t.strip()}
+        if allow is not None:
+            self.allow_types = {t.upper().strip() for t in allow if t.strip()}
+
+    def get_config(self) -> Dict[str, dict]:
+        """Return the current rule configuration for each known type."""
+        config = {}
+        for t in self.ALL_KNOWN_TYPES:
+            if t in self.blocked_types:
+                mode = "BLOCK"
+            elif t in self.allow_types:
+                mode = "ALLOW"
+            else:
+                mode = "SANITIZE"
+            config[t] = {
+                "type": t,
+                "action": mode,
+            }
+        return config
+
+    def evaluate(self, detections: List[Detection]) -> PolicyResult:
         """
-        Evaluate a list of detections.
-
-        Decision logic:
-
-            No detections
-                → ALLOW
-
-            Blocked sensitive type detected
-                → BLOCK
-
-            Other sensitive information detected
-                → SANITIZE
+        Evaluate a list of detections against the active policy.
         """
-
         if not detections:
-
             return PolicyResult(
                 decision=PolicyDecision.ALLOW,
-                reason="No sensitive information detected.",
+                reason="No sensitive information detected in prompt.",
                 detections=[],
                 blocked_types=[],
             )
 
-        detected_types = {
-            detection.data_type.upper()
-            for detection in detections
-        }
+        detected_types = {d.data_type.upper() for d in detections}
 
-        blocked = sorted(
-            detected_types.intersection(
-                self.blocked_types
-            )
-        )
-
+        # Check for any blocked types
+        blocked = sorted(detected_types.intersection(self.blocked_types))
         if blocked:
-
             return PolicyResult(
                 decision=PolicyDecision.BLOCK,
                 reason=(
-                    "The prompt contains sensitive data types "
-                    "that Airlock policy does not allow to be "
-                    "sent to the external AI service."
+                    f"Prompt contains strictly blocked credential/secret types ({', '.join(blocked)}). "
+                    f"Airlock AI blocked transmission to prevent credential leakage."
                 ),
                 detections=detections,
                 blocked_types=blocked,
             )
 
-        sanitizable = detected_types.intersection(
-            self.sanitize_types
-        )
+        # Check for types requiring sanitization
+        sanitizable = sorted(detected_types.intersection(self.sanitize_types))
+        allowed = sorted(detected_types.intersection(self.allow_types))
 
-        if sanitizable:
+        # Filter out detections that are explicitly allowed so they are not replaced
+        active_detections = [
+            d for d in detections if d.data_type.upper() not in self.allow_types
+        ]
 
+        if active_detections:
             return PolicyResult(
                 decision=PolicyDecision.SANITIZE,
                 reason=(
-                    "Sensitive information was detected and "
-                    "will be replaced with local surrogate "
-                    "tokens before the prompt is sent."
+                    f"Detected sensitive entities ({', '.join(sanitizable)}). "
+                    f"Airlock AI will sanitize these with surrogate tokens before transmission."
                 ),
-                detections=detections,
+                detections=active_detections,
                 blocked_types=[],
+                sanitized_types=sanitizable,
+                allowed_types=allowed,
             )
 
-        # If an unknown detection type appears, the safest
-        # default is to sanitize rather than expose it.
         return PolicyResult(
-            decision=PolicyDecision.SANITIZE,
-            reason=(
-                "Sensitive information was detected. "
-                "Airlock will sanitize it before transmission."
-            ),
-            detections=detections,
+            decision=PolicyDecision.ALLOW,
+            reason="All detected entities match policy ALLOW rules. Prompt sent safely.",
+            detections=[],
             blocked_types=[],
+            allowed_types=allowed,
         )
 
-    # ========================================================
-    # Convenience Method
-    # ========================================================
-
-    def check(
-        self,
-        detections: List[Detection],
-    ) -> bool:
-        """
-        Simple security check.
-
-        Returns:
-
-            True
-                Request may continue.
-
-            False
-                Request must be blocked.
-        """
-
-        result = self.evaluate(detections)
-
-        return result.allowed
+    def check(self, detections: List[Detection]) -> bool:
+        """Convenience check: True if permitted to proceed."""
+        return self.evaluate(detections).allowed
